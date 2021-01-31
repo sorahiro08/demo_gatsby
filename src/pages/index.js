@@ -1,22 +1,58 @@
 import React from "react"
-import { Link } from "gatsby"
+import { graphql, useStaticQuery } from "gatsby"
 
 import Layout from "../components/layout"
-import Image from "../components/image"
-import SEO from "../components/seo"
+import Kv from "../components/kv"
+import { Container, Row, Col } from "react-bootstrap"
+import BlogItem from "../components/blogItem"
 
-const IndexPage = () => (
-  <Layout>
-    <SEO title="Home" />
-    <h1>Hi people</h1>
-    <p>Welcome to your new Gatsby site.</p>
-    <p>Now go build something great.</p>
-    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
-      <Image />
-    </div>
-    <Link to="/page-2/">Go to page 2</Link> <br />
-    <Link to="/using-typescript/">Go to "Using TypeScript"</Link>
-  </Layout>
-)
+const IndexPage = () => {
+  const data = useStaticQuery(graphql`
+    query {
+      allContentfulBlogPost (
+        sort:{
+          fields: createdDate,
+          order: ASC
+        }
+      ) {
+        edges {
+          node {
+            title
+            slug
+            createdDate(formatString: "YYYY/MM/DD")
+            thumbnail {
+              fluid {
+                src
+              }
+            }
+          }
+        }
+      }
+    }
+  `);
+  console.log('data', data.allContentfulBlogPost.edges);
+
+  return (
+    <Layout>
+      <Kv />
+      <Container>
+        <Row>
+          {data.allContentfulBlogPost.edges.map((edge, index) => {
+            return (
+              <Col key={index} sm="4">
+                <BlogItem
+                  title={edge.node.title}
+                  date={edge.node.createdDate}
+                  src={edge.node.thumbnail.fluid.src}
+                  link={`/blog/${edge.node.slug}`}
+                />
+              </Col>
+            );
+          })}
+        </Row>
+      </Container>
+    </Layout>
+  )
+}
 
 export default IndexPage
